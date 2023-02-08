@@ -528,6 +528,18 @@ License: MPL-2.0
         QAction *la = cm->addAction("Open Containing Folder");
         QObject::connect(la, &QAction::triggered, std::bind(&DeduperMainWindow::locate_image, this, idx.row()));
 
+        if (idx.row() < im->rowCount()) {
+            QString path = QDir::toNativeSeparators(im->item(idx.row(), 0)->data(ImageItem::ImageItemRoles::path_role).toString());
+            QRegularExpression re(R"regex(.*Twitter[\\/].*[\\/](\d+)_.*)regex");
+            QRegularExpressionMatch matched = re.match(path);
+            if (!matched.captured().isNull()) {
+                QAction *tl = cm->addAction("Open Tweet Link");
+                QObject::connect(tl, &QAction::triggered, [matched](){
+                    QDesktopServices::openUrl(QString("https://twitter.com/whatever/status/%1").arg(matched.captured(1)));
+                });
+            }
+        }
+
         QObject::connect(cm, &QMenu::aboutToHide, [cm] {cm->deleteLater();});
         cm->popup(this->lv->mapToGlobal(pos));
     });
